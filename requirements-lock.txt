@@ -1,0 +1,6 @@
+# Exact versions used to generate the paper's tables (Python 3.14.5).
+# Install with: pip install -r requirements-lock.txt
+# For general use, requirements.txt (unpinned) is usually preferable.
+numpy==2.5.2
+scipy==1.18.0
+numba==0.67.0

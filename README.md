@@ -43,6 +43,9 @@ are new numerical-methods work built for the paper.
 pip install -r requirements.txt
 ```
 
+For the exact versions used to generate the paper's tables (recent Numba
+releases can lag new CPython versions), use `requirements-lock.txt` instead.
+
 No `pyproject.toml`/`setup.py` yet -- run scripts from this directory (or
 add it to `PYTHONPATH`) so `import barrier_pricing` resolves.
 
