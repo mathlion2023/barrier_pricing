@@ -250,13 +250,23 @@ def gauss_seidel_step(S, v, dv, A_over_S2, B_over_S, coefP, coefM, cross_coef,
                 if not found:
                     # No interior exercise boundary: Dirichlet value at the
                     # outer edge, imposed through C = R*V + W. At the barrier
-                    # (continuous monitoring, or a monitoring step) this is
-                    # C(H) = H-K (paper, Sec. 2.1: exercised at the wall
-                    # rather than knocked out). On the wide domain it is
-                    # immediate exercise, C(S_max) = S_max - K. (An earlier
+                    # (continuous monitoring, or a monitoring step), with no
+                    # jumps, this is C(H) = H-K (paper, Sec. 2.1: exercised at
+                    # the wall rather than knocked out). On the wide domain it
+                    # is immediate exercise, C(S_max) = S_max - K. (An earlier
                     # version imposed V = 1 here, which is a slope condition,
-                    # not the stated Dirichlet condition.)
-                    vb = (S[n - 1] - K - W[m, n - 1]) / R[m, n - 1]
+                    # not the stated Dirichlet condition.) With jumps present,
+                    # the wall is a true knock-out, C(H) = 0 (paper, Sec. 5.3):
+                    # a jump can cross H without the path ever touching it
+                    # continuously, so the stopped-representation value H-K no
+                    # longer applies at the wall once lam != 0. This matters
+                    # only where the wall is actually active (apply_barrier);
+                    # on the wide domain, away from the barrier, jumps do not
+                    # change the immediate-exercise far-field condition.
+                    if apply_barrier and lam != 0.0:
+                        vb = -W[m, n - 1] / R[m, n - 1]
+                    else:
+                        vb = (S[n - 1] - K - W[m, n - 1]) / R[m, n - 1]
             else:
                 start_idx = n - 1
                 # Dirichlet C(S[-1]) = 0 via C = R*V + W. At the barrier
@@ -279,10 +289,16 @@ def gauss_seidel_step(S, v, dv, A_over_S2, B_over_S, coefP, coefM, cross_coef,
                 c_new = R[m, k] * V[m, k] + W[m, k]
                 if apply_barrier and S[k] >= H:
                     # European: knocked out, worthless (eq. 9/15). American
-                    # without an interior exercise boundary: exercised right
-                    # at the wall rather than let it be knocked out (paper,
-                    # Sec. 2.1, "if we cannot find b(v,tau)<H ... C(H,.)=H-K").
-                    c_new = (S[k] - K) if american else 0.0
+                    # without an interior exercise boundary and without jumps:
+                    # exercised right at the wall rather than let it be
+                    # knocked out (paper, Sec. 2.1, "if we cannot find
+                    # b(v,tau)<H ... C(H,.)=H-K"). American with jumps: also
+                    # knocked out (paper, Sec. 5.3) -- a jump can carry the
+                    # price across H without a continuous touch, so the
+                    # stopped-representation value no longer applies, and the
+                    # jump-integral term below (which reads this same row)
+                    # must see 0, not H-K, at destinations at/beyond H.
+                    c_new = (S[k] - K) if (american and lam == 0.0) else 0.0
                 d_c = abs(c_new - C[m, k])
                 d_v = abs(V[m, k] - v_old[k])
                 if d_c > max_diff:
