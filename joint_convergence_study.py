@@ -357,6 +357,8 @@ def section_runtime():
         ("ADI 400/200/400", lambda: adi.price_barrier_call(s, HP, nS=400, nv=200, n_steps=400, spots=SPOTS[:-1]), 5),
         ("MOL 150/150/200 (one spot per run)", lambda: mol.price_barrier_call(s, HP, NO_JUMPS, n_S=150, M=150, n_time_steps=200), 1),
         ("frozen-branch COS n_ex=200 N=512 (one spot)", lambda: cos2d_american.price_barrier_call(s, HP, NO_JUMPS, n_exercise=200, N=512, M=200), 1),
+        ("joint N=2048 M=100 n0=50, jumps (one spot)", lambda: cj.price_barrier_call(s, HP, JumpParams(lam=0.5, gam=-0.05, del_=0.1)), 1),
+        ("MOL 150/150/200, jumps (one spot)", lambda: mol.price_barrier_call(s, HP, JumpParams(lam=0.5, gam=-0.05, del_=0.1), n_S=150, M=150, n_time_steps=200), 1),
     ):
         t0 = time.perf_counter()
         res = fn()
